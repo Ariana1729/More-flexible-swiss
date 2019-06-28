@@ -21,6 +21,7 @@ Options:
  - (P)air players
  - (Q)uit
  - (R)anking display
+ - (U)pdate database
 
 The pairings will be at a file called `pairs`, if you want to swop around people and add people it's perfectly ok as long as the format stays the same
 
@@ -56,3 +57,15 @@ Classname:
 player
 etc.
 etc.
+
+### Pairing format
+
+Player1(white) - Player2(black): ? - ?
+etc.
+
+etc.(class2)
+
+etc.
+
+? to be replaced with actual score
+Bye is used when there's a odd number of ppl

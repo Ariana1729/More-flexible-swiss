@@ -90,13 +90,26 @@ def tbsort(tb):
         return tb
 
 def gentiebreak(db): # generates tie breaks
-    tb=[] #[player, total score, total win, no. games with black, avg. opponent rating/total games, sum of opponent rating]
+    tb=[] #[player, total score, total win, no. games with black, avg. opponent rating/total games, sum of opponent rating, +_number of rep color(+ for white, - for black), played b4]
     for i in db:
-        tb.append([i[0],0,0,0,0,0])
+        tb.append([i[0],0,0,0,0,0,0,[]])
         for j in i[1:]:
+            if(j[0]=='Bye'):
+                continue
             tb[-1][1]+=j[2]
-            tb[-1][2]+=1 if j[1]==1.0 else 0
+            tb[-1][2]+=1 if j[2]==1.0 else 0
             tb[-1][3]+=1 if j[1]=='b' else 0
+            tb[-1][7].append(j[0])
+            if(j[1]=='w'):
+                if(tb[-1][6]>0):
+                    tb[-1][6]+=1
+                else:
+                    tb[-1][6]=1
+            else:
+                if(tb[-1][6]<0):
+                    tb[-1][6]-=1
+                else:
+                    tb[-1][6]=-1
     for i in xrange(len(tb)):
         if(len(db[i])==1):
             continue
@@ -109,7 +122,55 @@ def gentiebreak(db): # generates tie breaks
     return tbsort(tb)
 
 def pair(pl): # Pairs players
-    pairs=pl
+    pairs=[] # [white,black]
+    while(True): # pairing pl[0]
+        if(len(pl)==0):
+            break
+        if(len(pl)==1):
+            pairs.append([pl[0][0],'Bye']) # effectively 
+            break
+        lim=0.0
+        while(all([i[0] in pl[0][7] for i in pl[1:]])):
+            for i in pl[1:]:
+                pl[0][7].remove(i[0])
+        while(True):#slowly increase the lim to allow for more weirder pairs
+            for j in xrange(1,len(pl)): # finding pair
+                if(pl[j][0] in pl[0][7]): # played before
+                    continue
+                if(pl[0][1]-pl[j][1]>lim): # score difference too large
+                    break
+                if((pl[0][6]>0)!=(pl[j][6]>0)): # played diff color
+                    if(pl[0][6]>0): # pl[0] played white previously
+                        pairs.append([pl[j][0],pl[0][0]])
+                    else:
+                        pairs.append([pl[0][0],pl[j][0]])
+                    del pl[j]
+                    del pl[0]
+                    lim=-1
+                    break
+                if(abs(pl[0][6])>lim or abs(pl[j][6])>lim): # played same color too many times
+                    continue
+                if(abs(pl[0][6])>abs(pl[j][6])): # if pl[0] played same color more times
+                    if(pl[0][6]>0): # pl[0] played white, now playing black
+                        pairs.append([pl[j][0],pl[0][0]])
+                    else:
+                        pairs.append([pl[0][0],pl[j][0]])
+                    del pl[j]
+                    del pl[0]
+                    lim=-1
+                    break
+                else: # if pl[j] played same color more or equal times(pl[j] is weaker, so avoid playing same color more times)
+                    if(pl[j][6]>0): # pl[j] played white, now playing black
+                        pairs.append([pl[0][0],pl[j][0]])
+                    else:
+                        pairs.append([pl[j][0],pl[0][0]])
+                    del pl[j]
+                    del pl[0]
+                    lim=-1
+                    break
+            if(lim==-1):
+                break
+            lim+=0.5
     return pairs
 
 def run():
@@ -151,6 +212,8 @@ def run():
             if(not all(player not in i[1] for i in cls)):
                 print "Player already exists"
                 continue
+            if(player=='Bye'):
+                print "Can't take Bye"
             while True:
                 print "Enter class"
                 pclass=raw_input().strip()
@@ -222,6 +285,8 @@ def run():
             if(not all(nname not in i[1] for i in cls)):
                 print "Name already exists"
                 continue
+            if(nname=='Bye'):
+                print "Can't take Bye"
             if(player==nname):
                 print "The new name is the same"
                 continue
@@ -239,16 +304,16 @@ def run():
                     continue
                 topair[j]=nname
                 break
-            db=[[nname if i[0]==player else i[0],[[nname if j[0]==player else j[0]]+j[1:] for j in i[1:]]] for i in db]
+            db=[([nname] if i[0]==player else [i[0]])+[([nname] if j[0]==player else [j[0]])+j[1:] for j in i[1:]] for i in db]
             print "Replaced "+player+" with "+nname       
             updated=0
         elif(inp=='p'):
-            print gentiebreak(db)
             if(updated==0):
                 print "Databases aren't updated yet, do you want to continue Y/N"
                 if(raw_input().lower().strip()!='y'):
                     continue
-            print 'todo'
+            dbexp=[i for i in gentiebreak(db) if i[0] in topair]
+            print [pair([j for j in dbexp if j[0] in i[1]]) for i in cls]
         elif(inp=='q'):
             if(updated==0):
                 print "Databases aren't updated yet, do you want to continue Y/N"

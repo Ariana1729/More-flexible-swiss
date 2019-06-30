@@ -6,6 +6,7 @@ def parsedb(): # get database
     reempty=re.compile('^\s*$') # Check if empty
     dbf=open('mfsdb','r').read().split('\n')
     db=[] # db[i]=[name,[opp. name,color,score]]
+    pl=[]
     err=0
     for i in dbf:
         player=replayer.match(i)
@@ -13,6 +14,7 @@ def parsedb(): # get database
         empty=reempty.match(i)
         if(player):
             db.append([player.group(1).strip()])
+            pl.append(player.group(1).strip())
         elif(game):
             db[-1].append([game.group(1).strip(),game.group(2),float(game.group(3))])
         elif(empty):
@@ -20,6 +22,13 @@ def parsedb(): # get database
         else:
             print "Error parsing database "+i
             err=1
+    if(err==1):
+        return -1
+    for i in db:
+        for j in i[1:]:
+            if j[0] not in pl:
+                print "Unknown player: "+j[0]
+                err=1
     if(err==1):
         return -1
     return db
@@ -60,8 +69,44 @@ def parsepair(): # get pairs
         return -1
     return pairs
 
-def gentiebreak(pl): # generates tie breaks
-    return pl
+def tbsort(tb):
+    l = []
+    e = []
+    g = []
+    if len(tb) > 1:
+        p1 = tb[0]
+        for p2 in tb:
+            for i in [1,2,3,4,5,0]:
+                if(i==0):
+                    e.append(p2)
+                if(p1[i]==p2[i]):
+                    continue
+                l.append(p2) if p1[i]<p2[i] else g.append(p2)
+                break
+        # Don't forget to return something!
+        return tbsort(l)+e+tbsort(g)  # Just use the + operator to join lists
+    # Note that you want equal ^^^^^ not pivot
+    else:  # You need to handle the part at the end of the recursion - when you only have one element in your array, just return the array.
+        return tb
+
+def gentiebreak(db): # generates tie breaks
+    tb=[] #[player, total score, total win, no. games with black, avg. opponent rating/total games, sum of opponent rating]
+    for i in db:
+        tb.append([i[0],0,0,0,0,0])
+        for j in i[1:]:
+            tb[-1][1]+=j[2]
+            tb[-1][2]+=1 if j[1]==1.0 else 0
+            tb[-1][3]+=1 if j[1]=='b' else 0
+    for i in xrange(len(tb)):
+        if(len(db[i])==1):
+            continue
+        for j in db[i][1:]:
+            for k in tb:
+                if(k[0]==j[0]):
+                    tb[i][5]+=k[1]
+                    break
+        tb[i][4]=tb[i][5]/(len(db[i])-1)
+    return tbsort(tb)
 
 def pair(pl): # Pairs players
     pairs=pl
@@ -89,6 +134,12 @@ def run():
         print "An error occured when parsing the classes"
         return
     topair=[j for i in cls for j in i[1]]
+    for i in db:
+        if i[0] not in topair:
+            print "Unknown player: "+i[0]
+            cls=-1
+    if(cls==-1):
+        return -1
     updated=0
     while True:
         print "Welcome to Ariana's chess pairing system"
@@ -192,6 +243,7 @@ def run():
             print "Replaced "+player+" with "+nname       
             updated=0
         elif(inp=='p'):
+            print gentiebreak(db)
             if(updated==0):
                 print "Databases aren't updated yet, do you want to continue Y/N"
                 if(raw_input().lower().strip()!='y'):

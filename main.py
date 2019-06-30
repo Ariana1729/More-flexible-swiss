@@ -88,41 +88,139 @@ def run():
     if(cls==-1):
         print "An error occured when parsing the classes"
         return
-    topair=db
-    db=gentiebreak(db)
-    print "Welcome to Ariana's chess pairing system"
-    print "Please input a command:"
+    topair=[j for i in cls for j in i[1]]
+    updated=0
     while True:
+        print "Welcome to Ariana's chess pairing system"
+        print "Please input a command:"
         inp=raw_input().lower().strip()
         if(inp=='a'):
-            a
+            print "Enter player name"
+            player=raw_input().strip()
+            if(not all(player not in i[1] for i in cls)):
+                print "Player already exists"
+                continue
+            while True:
+                print "Enter class"
+                pclass=raw_input().strip()
+                if(not all(pclass!=i[0] for i in cls)):
+                    break
+                print "Class not found, do you want to add a new class? Y/N"
+                if(raw_input().lower().strip()=='y'):
+                    cls.append([pclass,[]])
+                    break
+            for i in cls:
+                if(i[0]==pclass):
+                    i[1].append(player)
+                    topair.append(player)
+                    print "Added player "+player+" to class "+pclass
+                    updated=0
+                    break
         elif(inp=='d'):
-            a
-        elif(inp=='g'):
-            a
+            print "Enter player name"
+            player=raw_input().strip()
+            for i in cls:
+                if player in i[1]:
+                    i[1].remove(player)
+                    topair.remove(player)
+                    print "Removed "+player+" from class "+i[0]
+                    updated=0
+                    break
+        elif(inp=='g'): 
+            print "Enter player name"
+            player=raw_input().strip()
+            if(player not in topair):
+                print "Player not found"
+                continue
+            topair.remove(player)
         elif(inp=='h'):
             print info
         elif(inp=='m'):
-            a
+            print "Enter player name"
+            player=raw_input().strip()
+            if(all(player not in i[1] for i in cls)):
+                print "Player does exists"
+                continue 
+            j=0
+            for i in xrange(len(cls)):
+                if player in cls[i][1]:
+                    print "Found "+player+" from class "+cls[i][0]
+                    j=i
+                    break
+            print "Enter class"
+            pclass=raw_input().strip()
+            if(all(pclass!=i[0] for i in cls)):
+                print "Class not found"
+            for i in cls:
+                if pclass==i[0]:
+                    if pclass==cls[j][0]:
+                        print "Player is already in "+pclass
+                        break
+                    cls[j][1].remove(player)
+                    i[1].append(player)
+                    print "Moved "+player+" from class "+cls[j][0]+" to class "+i[0]       
+                    break
         elif(inp=='n'):
-            a
+            print "Enter player name"
+            player=raw_input().strip()
+            if(all(player not in i[1] for i in cls)):
+                print "Player does exists"
+                continue 
+            print "Enter new name"
+            nname=raw_input().strip()
+            if(not all(nname not in i[1] for i in cls)):
+                print "Name already exists"
+                continue
+            if(player==nname):
+                print "The new name is the same"
+                continue
+            for i in cls:
+                for j in xrange(len(i[1])):
+                    if(i[1][j]!=player):
+                        continue
+                    i[1][j]=nname
+                    j=-1
+                    break
+                if(j==-1):
+                    break
+            for j in xrange(len(topair)):
+                if(topair[j]!=player):
+                    continue
+                topair[j]=nname
+                break
+            db=[[nname if i[0]==player else i[0],[[nname if j[0]==player else j[0]]+j[1:] for j in i[1:]]] for i in db]
+            print "Replaced "+player+" with "+nname       
+            updated=0
         elif(inp=='p'):
-            a
+            if(updated==0):
+                print "Databases aren't updated yet, do you want to continue Y/N"
+                if(raw_input().lower().strip()!='y'):
+                    continue
+            print 'todo'
         elif(inp=='q'):
+            if(updated==0):
+                print "Databases aren't updated yet, do you want to continue Y/N"
+                if(raw_input().lower().strip()!='y'):
+                    continue
             print "Quitting program"
             return 0
         elif(inp=='r'):
-            a
+            print cls
+            print db
+            print topair
+            print 'todo'
         elif(inp=='u'):
             pairs=parsepair()
             if(pairs==-1):
                 print "An error occured"
                 continue
+            updated=1
         elif(inp==''):
             print info
         else:
             print "Unknown command"
 
+run()
 #print parsedb()
 #print parsepl()
 #print parsepair()

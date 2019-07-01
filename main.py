@@ -79,14 +79,13 @@ def tbsort(tb):
             for i in [1,2,3,4,5,0]:
                 if(i==0):
                     e.append(p2)
-                if(p1[i]==p2[i]):
+                    break
+                elif(p1[i]==p2[i]):
                     continue
                 l.append(p2) if p1[i]<p2[i] else g.append(p2)
                 break
-        # Don't forget to return something!
-        return tbsort(l)+e+tbsort(g)  # Just use the + operator to join lists
-    # Note that you want equal ^^^^^ not pivot
-    else:  # You need to handle the part at the end of the recursion - when you only have one element in your array, just return the array.
+        return tbsort(l)+e+tbsort(g)  
+    else:
         return tb
 
 def gentiebreak(db): # generates tie breaks
@@ -195,12 +194,6 @@ def run():
         print "An error occured when parsing the classes"
         return
     topair=[j for i in cls for j in i[1]]
-    for i in db:
-        if i[0] not in topair:
-            print "Unknown player: "+i[0]
-            cls=-1
-    if(cls==-1):
-        return -1
     updated=0
     while True:
         print "Welcome to Ariana's chess pairing system"
@@ -313,7 +306,14 @@ def run():
                 if(raw_input().lower().strip()!='y'):
                     continue
             dbexp=[i for i in gentiebreak(db) if i[0] in topair]
-            print [pair([j for j in dbexp if j[0] in i[1]]) for i in cls]
+            pairs=[pair([j for j in dbexp if j[0] in i[1]]) for i in cls]
+            pairf=open('pairs','w')
+            for i in pairs:
+                for j in i:
+                    pairf.write(j[0]+" - "+j[1]+" : ? - ?\n")
+                pairf.write('\n')
+            pairf.close()
+            print("Paired players")
         elif(inp=='q'):
             if(updated==0):
                 print "Databases aren't updated yet, do you want to continue Y/N"
@@ -331,6 +331,24 @@ def run():
             if(pairs==-1):
                 print "An error occured"
                 continue
+            for i in []:#pairs
+                for j in db:
+                    if(j[0]==i[0]):
+                        j.append([i[1],'w',i[2]])
+                    if(j[0]==i[1]):
+                        j.append([i[0],'b',i[3]])
+            clf=open('class','w')
+            for i in cls:
+                clf.write(i[0]+':\n')
+                for j in i[1]:
+                    clf.write('\t'+j+'\n')
+            clf.close()
+            dbf=open('mfsdb','w')
+            for i in db:
+                dbf.write(i[0]+':\n')
+                for j in i[1:]:
+                    dbf.write('\t'+' '.join(str(k) for k in j)+'\n')
+            dbf.close()
             updated=1
         elif(inp==''):
             print info

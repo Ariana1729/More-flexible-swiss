@@ -223,6 +223,7 @@ def run():
                     print "Added player "+player+" to class "+pclass
                     updated=0
                     break
+            topair.append(player)
         elif(inp=='d'):
             print "Enter player name"
             player=raw_input().strip()
